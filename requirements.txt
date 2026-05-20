@@ -36,3 +36,4 @@ gradio
 fpdf
 sounddevice
 pdf2image
+jieba
