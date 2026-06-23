@@ -11,6 +11,8 @@ from fastapi import FastAPI
 from pydantic import BaseModel, Field
 from langserve import add_routes
 from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
+
 from langchain_core.messages import BaseMessage, SystemMessage, ToolMessage
 from langchain_core.tools import StructuredTool, tool
 from langchain_core.output_parsers import StrOutputParser
@@ -33,8 +35,10 @@ mlflow.langchain.autolog()
 credential_init()
 
 # 用來總結 Tool 結論的 模型
-model = ChatOpenAI(openai_api_key=os.environ['OPENAI_API_KEY'], model_name="gpt-4o-mini", temperature=0, name='llm_demo')
-    
+# model = ChatOpenAI(openai_api_key=os.environ['OPENAI_API_KEY'], model_name="gpt-4o-mini", temperature=0, name='llm_demo')
+model = ChatOllama(model='gpt-oss:120b-cloud',
+                       base_url='https://ollama.com',
+                       name='llm_demo', temperature=0)  
 
 app = FastAPI(title="chatbot",
               version="1.0",
@@ -56,7 +60,7 @@ os.environ['experiment'] = experiment
 run = mlflow.start_run(run_name='DEMO')
 os.environ["run_id"] = run.info.run_id
 
-model = mlflow.pyfunc.load_model("models:/Generation_Reflection_Demo/1")
+model = mlflow.pyfunc.load_model("models:/Generation_Reflection_Demo/3")
 
 # 將模型包裝成 LangChain 的 Runnable
 # 注意：這裡的 input 需要符合你模型的輸入格式（通常是 dict 或 DataFrame）
@@ -74,6 +78,8 @@ add_routes(
     pipeline,
     path="/demo"
 )
+
+
 
 
 

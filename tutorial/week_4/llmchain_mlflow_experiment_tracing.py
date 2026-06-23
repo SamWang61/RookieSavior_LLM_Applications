@@ -5,6 +5,7 @@ import mlflow
 import pandas as pd
 from mlflow.models import set_model
 from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_community.callbacks import MlflowCallbackHandler
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
@@ -42,6 +43,12 @@ def build_standard_chat_prompt_template(kwargs):
     return chat_prompt
 
 
+class NoTokenMlflowCallback(MlflowCallbackHandler):
+
+    def on_llm_new_token(self, token, **kwargs):
+        pass
+
+
 def create_feedback_pipeline(mlflow_callback):
 
     ## Teacher LLM
@@ -63,10 +70,15 @@ def create_feedback_pipeline(mlflow_callback):
     
     chat_prompt_template = build_standard_chat_prompt_template(input_)
 
-    model = ChatOpenAI(openai_api_key=os.environ['OPENAI_API_KEY'],
-                       model_name="gpt-4o-mini", temperature=0,
-                       callbacks=[mlflow_callback],
-                       name='feedback_model')
+    # model = ChatOpenAI(openai_api_key=os.environ['OPENAI_API_KEY'],
+    #                    model_name="gpt-4o-mini", temperature=0,
+    #                    callbacks=[mlflow_callback],
+    #                    name='feedback_model')
+
+    model = ChatOllama(model='deepseek-v4-pro:cloud',
+                       base_url='https://ollama.com',
+                       name='feedback_model', temperature=0,
+                       callbacks=[mlflow_callback])
     
     feedback_pipeline = chat_prompt_template|model|StrOutputParser()
 
@@ -107,10 +119,15 @@ def create_revision_pipeline(mlflow_callback):
     
     chat_prompt_template = build_standard_chat_prompt_template(input_)
 
-    model = ChatOpenAI(openai_api_key=os.environ['OPENAI_API_KEY'],
-                       model_name="gpt-4o-mini", temperature=0,
-                       callbacks=[mlflow_callback],
-                       name='revision_model')
+    model = ChatOllama(model='deepseek-v4-pro:cloud',
+                       base_url='https://ollama.com',
+                       name='revision_model', temperature=0,
+                       callbacks=[mlflow_callback])
+    
+    # model = ChatOpenAI(openai_api_key=os.environ['OPENAI_API_KEY'],
+    #                    model_name="gpt-4o-mini", temperature=0,
+    #                    callbacks=[mlflow_callback],
+    #                    name='revision_model')
     
     revision_pipeline = chat_prompt_template|model|output_parser
 
@@ -122,7 +139,7 @@ class LLMChainModel(mlflow.pyfunc.PythonModel):
     def load_context(self, context):
 
         # Attach the run_id so all logs go into this run
-        self.mlflow_cb = MlflowCallbackHandler(
+        self.mlflow_cb = NoTokenMlflowCallback(
         experiment=os.environ['experiment'],
         run_id=os.environ["run_id"],
         tracking_uri="http://127.0.0.1:8080",

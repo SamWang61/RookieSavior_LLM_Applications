@@ -5,6 +5,7 @@ import mlflow
 import pandas as pd
 from mlflow.models import set_model
 from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 from langchain_core.output_parsers import PydanticOutputParser
 from langchain_community.callbacks import MlflowCallbackHandler
 from langchain_core.prompts import PromptTemplate, ChatPromptTemplate, SystemMessagePromptTemplate, HumanMessagePromptTemplate
@@ -39,10 +40,15 @@ def create_feedback_pipeline(mlflow_callback):
     
     chat_prompt_template = build_standard_chat_prompt_template(input_)
 
-    model = ChatOpenAI(openai_api_key=os.environ['OPENAI_API_KEY'],
-                       model_name="gpt-4o-mini", temperature=0,
-                       callbacks=[mlflow_callback],
-                       name='feedback_model')
+    # model = ChatOpenAI(openai_api_key=os.environ['OPENAI_API_KEY'],
+    #                    model_name="gpt-4o-mini", temperature=0,
+    #                    callbacks=[mlflow_callback],
+    #                    name='feedback_model')
+
+    model = ChatOllama(model='deepseek-v4-pro:cloud',
+                       base_url='https://ollama.com',
+                       name='feedback_model', temperature=0,
+                       callbacks=[mlflow_callback])
     
     feedback_pipeline = chat_prompt_template|model|StrOutputParser()
 
@@ -79,10 +85,15 @@ def create_revision_pipeline(mlflow_callback):
     
     chat_prompt_template = build_standard_chat_prompt_template(input_)
 
-    model = ChatOpenAI(openai_api_key=os.environ['OPENAI_API_KEY'],
-                       model_name="gpt-4o-mini", temperature=0,
-                       callbacks=[mlflow_callback],
-                       name='revision_model')
+    # model = ChatOpenAI(openai_api_key=os.environ['OPENAI_API_KEY'],
+    #                    model_name="gpt-4o-mini", temperature=0,
+    #                    callbacks=[mlflow_callback],
+    #                    name='revision_model')
+
+    model = ChatOllama(model='deepseek-v4-pro:cloud',
+                       base_url='https://ollama.com',
+                       name='revision_model', temperature=0,
+                       callbacks=[mlflow_callback])
     
     revision_pipeline = chat_prompt_template|model|output_parser
 
