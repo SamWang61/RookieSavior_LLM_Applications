@@ -60,7 +60,7 @@ os.environ['experiment'] = experiment
 run = mlflow.start_run(run_name='DEMO')
 os.environ["run_id"] = run.info.run_id
 
-model = mlflow.pyfunc.load_model("models:/Generation_Reflection_Demo/3")
+model = mlflow.pyfunc.load_model("models:/Generation_Reflection_Demo/1")
 
 # 將模型包裝成 LangChain 的 Runnable
 # 注意：這裡的 input 需要符合你模型的輸入格式（通常是 dict 或 DataFrame）

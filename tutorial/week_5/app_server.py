@@ -16,6 +16,7 @@ import uvicorn
 from fastapi import FastAPI
 from langserve import add_routes
 from langchain_openai import ChatOpenAI
+from langchain_ollama import ChatOllama
 from langchain_core.runnables import RunnablePassthrough, chain
 from langchain_core.messages import AIMessage
 from langchain_core.prompts.image import ImagePromptTemplate
@@ -27,9 +28,13 @@ from initialization import credential_init
 credential_init()
 
 # 可以換成其他的API。
-model = ChatOpenAI(openai_api_key=os.environ['OPENAI_API_KEY'],
-                   model_name="gpt-4o-2024-05-13", temperature=0,
-                   streaming=True)
+# model = ChatOpenAI(openai_api_key=os.environ['OPENAI_API_KEY'],
+#                    model_name="gpt-4o-2024-05-13", temperature=0,
+#                    streaming=True)
+
+model = ChatOllama(model='kimi-k2.6:cloud',
+                   base_url='https://ollama.com',
+                   name='VLM', temperature=0)
 
 app = FastAPI(
     title="tutorial",
